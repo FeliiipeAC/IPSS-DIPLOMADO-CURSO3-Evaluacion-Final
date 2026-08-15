@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
 // ---------------------------------------------------------------------------
 // MODELO — Curso. El más importante: aquí viven las RELACIONES.
@@ -19,9 +19,24 @@ import mongoose from 'mongoose'
 
 const cursoSchema = new mongoose.Schema(
   {
-    // ...
+    nombre: { type: String, required: true, trim: true },
+    fechaInicio: { type: Date, required: true },
+    fechaTermino: { type: Date, required: true },
+    estado: {
+      type: String,
+      enum: ["EN_MATRICULA", "CERRADO"],
+      default: "EN_MATRICULA",
+    },
+    // Referencia a UN profesor. Empieza en null (curso sin profesor).
+    profesor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Profesor",
+      default: null,
+    },
+    // Array de referencias a alumnos. Empieza vacío.
+    alumnos: [{ type: mongoose.Schema.Types.ObjectId, ref: "Alumno" }],
   },
   { timestamps: true },
-)
+);
 
-export const Curso = mongoose.model('Curso', cursoSchema, 'cursos')
+export const Curso = mongoose.model("Curso", cursoSchema, "cursos");
