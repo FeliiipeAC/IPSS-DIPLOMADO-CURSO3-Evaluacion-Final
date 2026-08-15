@@ -1,4 +1,5 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 // ---------------------------------------------------------------------------
 // MODELO — Alumno.
@@ -11,9 +12,33 @@ import mongoose from 'mongoose'
 
 const alumnoSchema = new mongoose.Schema(
   {
-    // ...
+    nombre: { type: String, required: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    telefono: { type: String, trim: true },
+    password: { type: String, required: true, minlength: 6 },
   },
   { timestamps: true },
-)
+);
 
-export const Alumno = mongoose.model('Alumno', alumnoSchema, 'alumnos')
+alumnoSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  this.password = await bcrypt.hash(this.password, 10);
+});
+
+alumnoSchema.methods.compararPassword = function (passwordPlano) {
+  return bcrypt.compare(passwordPlano, this.password);
+};
+
+alumnoSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  delete obj.password;
+  return obj;
+};
+
+export const Alumno = mongoose.model("Alumno", alumnoSchema, "alumnos");
