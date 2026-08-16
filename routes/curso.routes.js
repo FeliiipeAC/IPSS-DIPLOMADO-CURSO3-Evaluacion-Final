@@ -4,17 +4,23 @@ import { proteger, soloRol } from "../middlewares/proteger.js";
 
 // ---------------------------------------------------------------------------
 // RUTAS — cursos. Todas exigen token (proteger) y rol (soloRol).
-// ⚠️ Las rutas FIJAS (/mis-cursos) van ANTES que las dinámicas (/:id),
-//    o Express cree que "mis-cursos" es un :id.
+// ⚠️ Las rutas FIJAS (/mis-cursos, /mis-matriculas) van ANTES que las
+//    dinámicas (/:id), o Express cree que "mis-cursos" es un :id.
 // ---------------------------------------------------------------------------
 export const cursoRoutes = Router();
 
-// ── Ruta FIJA primero ──
+// ── Rutas FIJAS primero ──
 cursoRoutes.get(
   "/mis-cursos",
   proteger,
   soloRol("profesor"),
   controller.misCursos,
+);
+cursoRoutes.get(
+  "/mis-matriculas",
+  proteger,
+  soloRol("alumno"),
+  controller.misMatriculas,
 );
 
 // ── CRUD (profesor) ──
@@ -23,7 +29,7 @@ cursoRoutes.post("/", proteger, soloRol("profesor"), controller.crear);
 cursoRoutes.put("/:id", proteger, soloRol("profesor"), controller.editar);
 cursoRoutes.delete("/:id", proteger, soloRol("profesor"), controller.borrar);
 
-// ── Reglas del profesor (Paso 8) ──
+// ── Reglas del profesor ──
 cursoRoutes.post(
   "/:id/asignarme",
   proteger,
@@ -35,4 +41,18 @@ cursoRoutes.get(
   proteger,
   soloRol("profesor"),
   controller.alumnosDelCurso,
+);
+
+// ── Reglas del alumno ──
+cursoRoutes.post(
+  "/:id/matricularme",
+  proteger,
+  soloRol("alumno"),
+  controller.matricularme,
+);
+cursoRoutes.delete(
+  "/:id/matricularme",
+  proteger,
+  soloRol("alumno"),
+  controller.desmatricularme,
 );

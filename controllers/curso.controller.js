@@ -100,7 +100,8 @@ export const alumnosDelCurso = async (req, res) => {
 // GET /api/cursos/mis-matriculas — los cursos donde está matriculado ESTE alumno.
 export const misMatriculas = async (req, res) => {
   try {
-    // TODO: filtra los cursos que tengan a req.usuario.id en su array de alumnos.
+    const cursos = await service.cursosDelAlumno(req.usuario.id);
+    res.json(cursos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -109,11 +110,25 @@ export const misMatriculas = async (req, res) => {
 // POST /api/cursos/:id/matricularme — el alumno se matricula a sí mismo.
 export const matricularme = async (req, res) => {
   try {
-    // TODO — REGLA DE NEGOCIO:
-    //   1. Busca el curso. Si no existe → 404.
-    //   2. Si NO está EN_MATRICULA → 409 (curso cerrado).
-    //   3. Si el alumno YA está en el curso → 409 (no duplicar).
-    //   4. Agrega req.usuario.id al array de alumnos. Guarda.
+    const curso = await service.buscarCurso(req.params.id);
+    if (!curso) return res.status(404).json(NO_ENCONTRADO);
+
+    // REGLA: solo si está EN_MATRICULA. Si está CERRADO → 409.
+    if (curso.estado !== "EN_MATRICULA") {
+      return res.status(409).json({ error: "El curso está cerrado" });
+    }
+
+    // REGLA: no matricularse dos veces. El array guarda ObjectId → comparo como texto.
+    const yaEsta = curso.alumnos.some((a) => a.toString() === req.usuario.id);
+    if (yaEsta) {
+      return res
+        .status(409)
+        .json({ error: "Ya estás matriculado en este curso" });
+    }
+
+    curso.alumnos.push(req.usuario.id); // mi id sale del TOKEN, no del body
+    await curso.save();
+    res.status(201).json(curso);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -122,10 +137,19 @@ export const matricularme = async (req, res) => {
 // DELETE /api/cursos/:id/matricularme — el alumno se sale del curso.
 export const desmatricularme = async (req, res) => {
   try {
-    // TODO:
-    //   1. Busca el curso. Si no existe → 404.
-    //   2. Si NO está EN_MATRICULA → 409.
-    //   3. Quita a req.usuario.id del array de alumnos. Guarda.
+    const curso = await service.buscarCurso(req.params.id);
+    if (!curso) return res.status(404).json(NO_ENCONTRADO);
+
+    if (curso.estado !== "EN_MATRICULA") {
+      return res.status(409).json({ error: "El curso está cerrado" });
+    }
+
+    // Dejo el array sin mi id (filter quita al que coincide conmigo).
+    curso.alumnos = curso.alumnos.filter(
+      (a) => a.toString() !== req.usuario.id,
+    );
+    await curso.save();
+    res.json(curso);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
