@@ -1,89 +1,63 @@
-# 🎓 Evaluación Integradora · Plataforma de Cursos
+# 🎓 API · Plataforma de Cursos
 
-> **Diplomado IPS · Módulo 3** — Backend y APIs REST
-> Instituto Profesional San Sebastián
+   API REST de una plataforma de cursos: profesores que dictan, alumnos que se
+   matriculan, con autenticación por rol (JWT + bcrypt) y relaciones en MongoDB.
 
-Este es tu **punto de partida**. La estructura ya está armada; tú construyes la lógica.
+   > Evaluación Integradora · Módulo 3 (Backend y APIs REST) · Diplomado IPSS
 
----
+   ## 🎥 Video demostrativo
 
-## 🚀 Cómo empezar
+   👉 
 
-Haz un **fork** para tener tu copia, clónala, e instala:
+   ## Requisitos
 
-```bash
-git clone https://github.com/TU-USUARIO/IPSS-DIPLOMADO-CURSO3-Evaluacion-Final.git
-cd IPSS-DIPLOMADO-CURSO3-Evaluacion-Final
-npm install
-```
+   - Node.js 18 o superior
+   - Una base de datos MongoDB (Atlas o local)
 
-**Configura tu MongoDB:** abre `config/db.js` y reemplaza `usuario-mongo` y `clave-secreta`
-por los de tu cluster de Atlas.
+   ## Cómo levantar el proyecto
 
-Levanta el servidor:
+   ```
+   git clone https://github.com/FeliiipeAC/IPSS-DIPLOMADO-CURSO3-Evaluacion-Final.git
+   cd IPSS-DIPLOMADO-CURSO3-Evaluacion-Final
+   npm install
+   ```
 
-```bash
-npm run dev
-```
+   ```
+   MONGODB_URI=""mongodb://lfarayac_db_user:CbOZAmTfrL7nNGVT@ac-hvse6cz-shard-00-00.i4wgcz3.mongodb.net:27017,ac-hvse6cz-shard-00-01.i4wgcz3.mongodb.net:27017,ac-hvse6cz-shard-00-02.i4wgcz3.mongodb.net:27017/plataforma?ssl=true&replicaSet=atlas-byvwe0-shard-0&authSource=admin&retryWrites=true&w=majority""
+   ```
 
-Si ves `✅ API escuchando en http://localhost:3000`, ya está. Entra a
-`http://localhost:3000/` y deberías ver `{ "ok": true, ... }`.
+   Levanta el servidor:
 
----
+   ```
+   npm run start
+   ```
 
-## 📂 Qué hay en el repositorio
+   Queda escuchando en **http://localhost:3000**.
 
-```
-├── server.js              arranque (listo — solo descomenta tus rutas)
-├── config/
-│   ├── db.js              conexión a Mongo (pon tu cadena)
-│   └── jwt.js             el secreto para firmar los tokens
-├── models/                ← los 3 schemas (TÚ los defines)
-│   ├── profesor.model.js
-│   ├── alumno.model.js
-│   └── curso.model.js
-├── middlewares/
-│   └── proteger.js        el guardia JWT + el filtro por rol (TÚ los completas)
-├── routes/                conecta cada ruta con su controller
-├── controllers/           reciben la petición y responden
-└── services/              hablan con la base de datos
-```
+   ## Autenticación
 
-Los archivos con **`// TODO:`** son los que tienes que completar. Los demás
-(`server.js`, `config/`, el manejo de errores en los `try/catch`) ya funcionan.
+   Regístrate o haz login en `/api/auth/...` para obtener un **token**. Envíalo en
+   las rutas protegidas como header `Authorization: Bearer <token>`.
 
----
+   ## Rutas
 
-## 🗺️ El orden sugerido para resolverlo
+   | Método | Ruta | Rol | Descripción |
+   |---|---|---|---|
+   | POST | `/api/auth/registro/profesor` | pública | Registrar profesor |
+   | POST | `/api/auth/registro/alumno` | pública | Registrar alumno |
+   | POST | `/api/auth/login` | pública | Login (devuelve token con rol) |
+   | GET | `/api/cursos` | profesor | Todos los cursos (con populate) |
+   | POST | `/api/cursos` | profesor | Crear curso |
+   | PUT | `/api/cursos/:id` | profesor | Editar curso |
+   | DELETE | `/api/cursos/:id` | profesor | Borrar curso |
+   | GET | `/api/cursos/mis-cursos` | profesor | Los cursos que dicto |
+   | POST | `/api/cursos/:id/asignarme` | profesor | Asignarme un curso libre |
+   | GET | `/api/cursos/:id/alumnos` | profesor | Alumnos de mi curso |
+   | POST | `/api/cursos/:id/matricularme` | alumno | Matricularme |
+   | DELETE | `/api/cursos/:id/matricularme` | alumno | Salirme del curso |
+   | GET | `/api/cursos/mis-matriculas` | alumno | Mis cursos matriculados |
 
-No intentes hacerlo todo de una. Un camino que funciona:
+   ## Tecnologías
 
-1. **Los 3 modelos** (`models/`) — sin ellos, nada persiste.
-2. **El registro y login** (`auth.*`) — para poder obtener un token.
-3. **El middleware `proteger`** — para que las rutas protegidas dejen entrar.
-4. **El CRUD de cursos** — crear, listar (con `.populate()`), editar, borrar.
-5. **Las reglas de negocio** — asignarme, matricularme, y sus validaciones (el `409`).
-6. **El `soloRol`** — para separar lo que puede el profesor de lo que puede el alumno.
-
-Ve probando cada paso con Postman antes de seguir al siguiente.
-
----
-
-## 📋 Lo que se evalúa
-
-El enunciado completo (rutas, reglas de negocio, rúbrica y ponderación) está en el
-material de la evaluación. En resumen:
-
-- **Modelado y CRUD** — los 3 modelos, sus relaciones, y `.populate()`.
-- **Reglas de negocio** — matrícula según el estado del curso, asignación "primero que
-  llega", cada profesor ve solo sus cursos. **Es lo que más pesa.**
-- **Autenticación y roles** — JWT + bcrypt, y el rol que restringe el acceso.
-- **Códigos de estado** — el correcto en cada caso (200, 201, 400, 401, 403, 404, 409).
-- **Un video** demostrando el flujo y explicando tus decisiones.
-
-> ⚠️ Tu repositorio es **público**. No subas tu contraseña real de MongoDB: deja los
-> marcadores en `config/db.js`.
-
----
-
-**Instituto Profesional San Sebastián** · Diplomado · Módulo 3 — Backend y APIs REST
+   Node.js · Express · MongoDB + Mongoose · JWT · bcrypt
+   ````
