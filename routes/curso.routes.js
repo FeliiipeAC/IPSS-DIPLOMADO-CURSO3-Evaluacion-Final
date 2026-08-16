@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import * as controller from '../controllers/curso.controller.js'
-// import { proteger, soloRol } from '../middlewares/proteger.js'
+import { proteger, soloRol } from '../middlewares/proteger.js'
 
 // ---------------------------------------------------------------------------
 // RUTAS — cursos. La mayoría van protegidas y con rol.
@@ -27,3 +27,8 @@ export const cursoRoutes = Router()
 //
 // ⚠️ OJO con el orden: las rutas fijas (/mis-cursos) van ANTES que las
 //    dinámicas (/:id), o Express interpretará "mis-cursos" como un :id.
+
+   cursoRoutes.get("/", proteger, soloRol("profesor"), controller.listar);
+   cursoRoutes.post("/", proteger, soloRol("profesor"), controller.crear);
+   cursoRoutes.put("/:id", proteger, soloRol("profesor"), controller.editar);
+   cursoRoutes.delete("/:id", proteger, soloRol("profesor"), controller.borrar);
