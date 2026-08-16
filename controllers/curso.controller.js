@@ -53,31 +53,45 @@ export const borrar = async (req, res) => {
 // GET /api/cursos/mis-cursos — los cursos que dicta ESTE profesor.
 export const misCursos = async (req, res) => {
   try {
-    // TODO: filtra los cursos por profesor = req.usuario.id.
+    const cursos = await service.cursosDelProfesor(req.usuario.id);
+    res.json(cursos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// POST /api/cursos/:id/asignarme — el profesor se asigna un curso libre.
+// POST /api/cursos/:id/asignarme — el profesor se asigna un curso LIBRE.
 export const asignarme = async (req, res) => {
   try {
-    // TODO — REGLA DE NEGOCIO:
-    //   1. Busca el curso. Si no existe → 404.
-    //   2. Si YA tiene profesor → 409 (nadie se lo quita a otro).
-    //   3. Si está libre → asígnale req.usuario.id como profesor. Guarda.
+    const curso = await service.buscarCurso(req.params.id);
+    if (!curso) return res.status(404).json(NO_ENCONTRADO);
+
+    // REGLA: si ya tiene profesor, nadie se lo quita → 409.
+    if (curso.profesor) {
+      return res.status(409).json({ error: "Este curso ya tiene profesor" });
+    }
+
+    curso.profesor = req.usuario.id; // el id sale del TOKEN, no del body
+    await curso.save();
+    res.json(curso);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-// GET /api/cursos/:id/alumnos — solo el profesor que dicta el curso.
+// GET /api/cursos/:id/alumnos — SOLO el profesor que dicta el curso.
 export const alumnosDelCurso = async (req, res) => {
   try {
-    // TODO — REGLA DE PROPIEDAD:
-    //   1. Busca el curso. Si no existe → 404.
-    //   2. Si el profesor del curso NO es req.usuario.id → 403.
-    //   3. Devuelve la lista de alumnos (con populate).
+    const curso = await service.buscarCursoConAlumnos(req.params.id);
+    if (!curso) return res.status(404).json(NO_ENCONTRADO);
+
+    // REGLA DE PROPIEDAD: si el profesor del curso NO soy yo → 403.
+    // curso.profesor es un ObjectId; lo comparo como texto con mi id.
+    if (!curso.profesor || curso.profesor.toString() !== req.usuario.id) {
+      return res.status(403).json({ error: "No dictas este curso" });
+    }
+
+    res.json(curso.alumnos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
